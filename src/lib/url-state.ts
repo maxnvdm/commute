@@ -1,5 +1,5 @@
 import { DEFAULT_CITY_ID } from "@/config/cities";
-import { DEFAULT_MAX_TIME, MAX_TIME_OPTIONS } from "./isochrone";
+import { DEFAULT_MAX_TIME, MAX_TIME_OPTIONS, isValidLngLat } from "./isochrone";
 import { TRAVEL_MODES, type TravelMode } from "./routing/types";
 
 /**
@@ -51,10 +51,7 @@ export function decodeState(params: URLSearchParams): AppState {
   const lng = Number(lngRaw);
   const lat = Number(latRaw);
   const dest =
-    lngRaw !== null &&
-    latRaw !== null &&
-    Number.isFinite(lng) &&
-    Number.isFinite(lat)
+    lngRaw !== null && latRaw !== null && isValidLngLat(lng, lat)
       ? { lng, lat, label: params.get("label") ?? "" }
       : undefined;
 

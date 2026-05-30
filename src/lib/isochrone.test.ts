@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   BAND_PALETTE,
   DEFAULT_RANGES,
+  MAX_TIME_OPTIONS,
   colorForBand,
   colorForValueSeconds,
   colorizeIsochrones,
@@ -32,11 +33,20 @@ describe("rangesForMaxTime", () => {
   it("returns the preset for a known max time, ending at that max", () => {
     expect(rangesForMaxTime(60)).toEqual([10, 20, 30, 45, 60]);
     expect(rangesForMaxTime(30)).toEqual([10, 20, 30]);
-    expect(rangesForMaxTime(90).at(-1)).toBe(90);
+    expect(rangesForMaxTime(45).at(-1)).toBe(45);
   });
 
   it("falls back to default ranges for an unknown max time", () => {
     expect(rangesForMaxTime(17)).toEqual(DEFAULT_RANGES);
+  });
+
+  it("only offers max-time options within the ORS/MAX_MINUTES cap", () => {
+    // Every offered preset must end at or below 60 min, else the legend would
+    // show a band the server (parseRanges) and ORS drop. Guards the P0 regression.
+    for (const t of MAX_TIME_OPTIONS) {
+      expect(t).toBeLessThanOrEqual(60);
+      expect(rangesForMaxTime(t).at(-1)).toBeLessThanOrEqual(60);
+    }
   });
 });
 

@@ -21,6 +21,8 @@ function HomeContent() {
   const [isochrones, setIsochrones] = useState<IsochroneResult | null>(null);
   const [isoLoading, setIsoLoading] = useState(false);
   const [isoError, setIsoError] = useState<string | null>(null);
+  // Bumped by the Retry button to re-run the fetch effect after a failure.
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Keep the URL in sync with state (shareable, no history spam).
   useEffect(() => {
@@ -73,7 +75,7 @@ function HomeContent() {
       active = false;
       controller.abort();
     };
-  }, [state.dest, state.mode, state.maxTime]);
+  }, [state.dest, state.mode, state.maxTime, reloadKey]);
 
   const city = getCity(state.city);
   const ranges = rangesForMaxTime(state.maxTime);
@@ -93,6 +95,10 @@ function HomeContent() {
     setState((prev) => ({ ...prev, maxTime }));
   }, []);
 
+  const handleRetry = useCallback(() => {
+    setReloadKey((k) => k + 1);
+  }, []);
+
   return (
     <main className="relative w-full flex-1">
       <MapView
@@ -101,7 +107,7 @@ function HomeContent() {
         isochrones={isochrones}
       />
 
-      <div className="pointer-events-none absolute left-4 top-4 z-10 w-80 max-w-[calc(100%-2rem)]">
+      <div className="pointer-events-none absolute left-4 top-4 z-10 w-[calc(100%-2rem)] sm:w-80">
         <div className="pointer-events-auto rounded-lg bg-white/95 p-3 shadow-lg backdrop-blur dark:bg-zinc-900/95">
           <h1 className="mb-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
             Commute Heatmap · {city.name}
@@ -124,9 +130,17 @@ function HomeContent() {
             </p>
           )}
           {isoError && (
-            <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-              {isoError}
-            </p>
+            <div className="mt-2 flex items-center gap-2">
+              <p className="text-xs text-red-600 dark:text-red-400">{isoError}</p>
+              <button
+                type="button"
+                onClick={handleRetry}
+                disabled={isoLoading}
+                className="rounded border border-red-300 px-2 py-0.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
+              >
+                Retry
+              </button>
+            </div>
           )}
         </div>
       </div>

@@ -13,6 +13,9 @@ import { colorizeIsochrones, parseRanges } from "@/lib/isochrone";
 
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 const MAX_CACHE_ENTRIES = 200;
+// Results are deterministic per location/mode/ranges, so let the CDN cache them
+// too (a day fresh, then served stale for a week while revalidating).
+const CACHE_CONTROL = "public, s-maxage=86400, stale-while-revalidate=604800";
 const cache = new Map<string, { at: number; data: unknown }>();
 
 // ~110m rounding so nearby clicks reuse the same cached isochrone.
@@ -40,7 +43,9 @@ export async function GET(req: NextRequest) {
   const key = `${roundCoord(lng)},${roundCoord(lat)}|${mode}|${ranges.join("-")}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
-    return NextResponse.json(hit.data, { headers: { "x-cache": "HIT" } });
+    return NextResponse.json(hit.data, {
+      headers: { "x-cache": "HIT", "Cache-Control": CACHE_CONTROL },
+    });
   }
 
   let provider;
@@ -60,7 +65,9 @@ export async function GET(req: NextRequest) {
     if (cache.size >= MAX_CACHE_ENTRIES) cache.clear();
     cache.set(key, { at: Date.now(), data });
 
-    return NextResponse.json(data, { headers: { "x-cache": "MISS" } });
+    return NextResponse.json(data, {
+      headers: { "x-cache": "MISS", "Cache-Control": CACHE_CONTROL },
+    });
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Isochrone request failed";

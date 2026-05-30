@@ -67,11 +67,21 @@ src/
       openrouteservice.ts # ORS isochrone provider (v1)
 ```
 
+## Deploy (Vercel)
+
+This is a standard Next.js App Router app and deploys to Vercel with no extra config:
+
+1. Import the repo at [vercel.com/new](https://vercel.com/new).
+2. Add an environment variable **`ORS_API_KEY`** (free key from [OpenRouteService](https://openrouteservice.org/)). Without it the map and address search still work, but the commute heatmap returns a 503.
+3. Deploy — the build command (`next build`) and output are auto-detected.
+
+Both API routes cache upstream responses — the isochrone route in-memory plus a `Cache-Control: public, s-maxage=...` header for the CDN, and the geocode route via Next's `revalidate` — so repeated identical requests avoid re-hitting OpenRouteService/Nominatim. This keeps you within the free-tier quotas and makes shared links fast.
+
 ## Roadmap status
 
 - [x] **M0 — Setup:** scaffold, MapLibre + OpenFreeMap map, CI (lint/typecheck/test/build)
 - [x] **M1 — Address search:** geocode proxy + autocomplete, recenter + marker, shareable URL
 - [x] **M2 — Isochrone heatmap (MVP):** ORS proxy + render colored time bands + legend (needs `ORS_API_KEY`)
 - [x] **M3 — Modes & controls:** driving/walking/cycling toggle + adjustable max time, all encoded in the shareable URL
-- [ ] **M4 — Polish & deploy:** loading/error states, caching, mobile, Vercel
+- [x] **M4 — Polish & deploy:** retry on error, CDN cache header on the isochrone route, mobile-responsive panel, Vercel deploy guide
 - [ ] **M5/M6 (v2):** Valhalla traffic, OpenTripPlanner transit

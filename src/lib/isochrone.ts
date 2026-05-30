@@ -3,6 +3,26 @@ import type { IsochroneResult } from "./routing/types";
 /** Default time bands in minutes (confirmed in PLAN.md §12). */
 export const DEFAULT_RANGES = [10, 20, 30, 45, 60];
 
+/** Selectable max-commute-time options (minutes) for the UI control. */
+export const MAX_TIME_OPTIONS = [30, 45, 60, 90];
+export const DEFAULT_MAX_TIME = 60;
+
+/**
+ * Nice, predictable band sets keyed by max time. Keeping these fixed (rather
+ * than scaling arbitrarily) gives readable legends and stays within ORS limits.
+ */
+const RANGE_PRESETS: Record<number, number[]> = {
+  30: [10, 20, 30],
+  45: [15, 30, 45],
+  60: [10, 20, 30, 45, 60],
+  90: [15, 30, 45, 60, 90],
+};
+
+/** Returns the band set for a max time, falling back to the default bands. */
+export function rangesForMaxTime(maxMinutes: number): number[] {
+  return RANGE_PRESETS[maxMinutes] ?? [...DEFAULT_RANGES];
+}
+
 /** Guardrails to keep us inside ORS free-tier limits and a readable legend. */
 export const MAX_RANGES = 6;
 export const MAX_MINUTES = 60;

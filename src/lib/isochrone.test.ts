@@ -7,6 +7,7 @@ import {
   colorizeIsochrones,
   legendItems,
   parseRanges,
+  rangesForMaxTime,
 } from "./isochrone";
 import type { IsochroneResult } from "./routing/types";
 
@@ -24,6 +25,18 @@ describe("parseRanges", () => {
 
   it("drops values over the max minutes", () => {
     expect(parseRanges("10,90,20")).toEqual([10, 20]);
+  });
+});
+
+describe("rangesForMaxTime", () => {
+  it("returns the preset for a known max time, ending at that max", () => {
+    expect(rangesForMaxTime(60)).toEqual([10, 20, 30, 45, 60]);
+    expect(rangesForMaxTime(30)).toEqual([10, 20, 30]);
+    expect(rangesForMaxTime(90).at(-1)).toBe(90);
+  });
+
+  it("falls back to default ranges for an unknown max time", () => {
+    expect(rangesForMaxTime(17)).toEqual(DEFAULT_RANGES);
   });
 });
 

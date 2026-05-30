@@ -100,7 +100,7 @@ function HomeContent() {
   }, []);
 
   return (
-    <main className="relative w-full flex-1">
+    <main className="relative w-full flex-1 h-[100dvh]">
       <MapView
         city={city}
         marker={state.dest ?? null}

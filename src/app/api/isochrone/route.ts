@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createOpenRouteServiceProvider } from "@/lib/routing/openrouteservice";
 import { TRAVEL_MODES, type TravelMode } from "@/lib/routing/types";
-import { colorizeIsochrones, parseRanges } from "@/lib/isochrone";
+import { colorizeIsochrones, isValidLngLat, parseRanges } from "@/lib/isochrone";
 
 /**
  * Isochrone proxy → OpenRouteService.
@@ -9,6 +9,10 @@ import { colorizeIsochrones, parseRanges } from "@/lib/isochrone";
  * Returns GeoJSON time-band polygons (colorized per band) for a destination.
  * The ORS key stays server-side. Responses are cached in-memory by rounded
  * destination + mode + ranges to stay under the free-tier quota (~500/day).
+ *
+ * Note: this in-memory cache is best-effort and per-instance — serverless
+ * platforms run many isolated instances, so the real cross-request protection
+ * is the Cache-Control header below (shared CDN cache).
  */
 
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -25,17 +29,20 @@ function roundCoord(n: number): number {
 
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
-  const lng = Number(sp.get("lng"));
-  const lat = Number(sp.get("lat"));
+  const lngRaw = sp.get("lng");
+  const latRaw = sp.get("lat");
+  // Number(null) is 0, so treat absent params as invalid rather than (0,0).
+  const lng = lngRaw === null ? NaN : Number(lngRaw);
+  const lat = latRaw === null ? NaN : Number(latRaw);
   const modeRaw = sp.get("mode");
   const mode: TravelMode = TRAVEL_MODES.includes(modeRaw as TravelMode)
     ? (modeRaw as TravelMode)
     : "driving";
   const ranges = parseRanges(sp.get("ranges"));
 
-  if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+  if (!isValidLngLat(lng, lat)) {
     return NextResponse.json(
-      { error: "Missing or invalid lng/lat" },
+      { error: "Missing or out-of-range lng/lat" },
       { status: 400 },
     );
   }
@@ -62,7 +69,12 @@ export async function GET(req: NextRequest) {
     const raw = await provider.getIsochrones({ point: { lng, lat }, mode, ranges });
     const data = colorizeIsochrones(raw, ranges);
 
-    if (cache.size >= MAX_CACHE_ENTRIES) cache.clear();
+    // Evict the single oldest entry (FIFO) rather than wiping the whole cache,
+    // which would cause a MISS burst and risk the ORS daily quota.
+    if (cache.size >= MAX_CACHE_ENTRIES) {
+      const oldest = cache.keys().next().value;
+      if (oldest !== undefined) cache.delete(oldest);
+    }
     cache.set(key, { at: Date.now(), data });
 
     return NextResponse.json(data, {

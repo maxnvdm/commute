@@ -10,6 +10,15 @@ export type TravelMode = "driving" | "walking" | "cycling";
 
 export const TRAVEL_MODES: TravelMode[] = ["driving", "walking", "cycling"];
 
+export const DEFAULT_TRAVEL_MODE: TravelMode = "driving";
+
+/** Parses an untrusted value into a TravelMode, falling back to the default. */
+export function parseTravelMode(value: string | null | undefined): TravelMode {
+  return TRAVEL_MODES.includes(value as TravelMode)
+    ? (value as TravelMode)
+    : DEFAULT_TRAVEL_MODE;
+}
+
 export interface LngLat {
   lng: number;
   lat: number;

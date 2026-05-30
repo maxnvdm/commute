@@ -12,7 +12,7 @@ afterEach(() => {
 describe("OpenRouteServiceProvider.getIsochrones", () => {
   it("posts ranges in seconds, the mapped profile, and the API key", async () => {
     const fetchMock = vi.fn(
-      async (_url: string | URL | Request, _init?: RequestInit) =>
+      async (): Promise<Response> =>
         new Response(
           JSON.stringify({ type: "FeatureCollection", features: [] }),
           { status: 200 },
@@ -27,7 +27,10 @@ describe("OpenRouteServiceProvider.getIsochrones", () => {
       ranges: [10, 30],
     });
 
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
     // Profile maps cycling -> cycling-regular and is part of the URL path.
     expect(String(url)).toContain("cycling-regular");
     expect(init?.headers).toMatchObject({ Authorization: "test-key" });

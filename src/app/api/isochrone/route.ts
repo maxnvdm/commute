@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createOpenRouteServiceProvider } from "@/lib/routing/openrouteservice";
-import { TRAVEL_MODES, type TravelMode } from "@/lib/routing/types";
+import { parseTravelMode } from "@/lib/routing/types";
 import { colorizeIsochrones, isValidLngLat, parseRanges } from "@/lib/isochrone";
 
 /**
@@ -34,10 +34,7 @@ export async function GET(req: NextRequest) {
   // Number(null) is 0, so treat absent params as invalid rather than (0,0).
   const lng = lngRaw === null ? NaN : Number(lngRaw);
   const lat = latRaw === null ? NaN : Number(latRaw);
-  const modeRaw = sp.get("mode");
-  const mode: TravelMode = TRAVEL_MODES.includes(modeRaw as TravelMode)
-    ? (modeRaw as TravelMode)
-    : "driving";
+  const mode = parseTravelMode(sp.get("mode"));
   const ranges = parseRanges(sp.get("ranges"));
 
   if (!isValidLngLat(lng, lat)) {

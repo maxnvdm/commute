@@ -113,9 +113,11 @@ function HomeContent() {
             Commute Heatmap · {city.name}
           </h1>
           <SearchBox city={state.city} onSelect={handleSelect} />
-          {state.dest?.label && (
+          {state.dest && (
             <p className="mt-2 truncate text-xs text-zinc-500 dark:text-zinc-400">
-              📍 {state.dest.label}
+              📍{" "}
+              {state.dest.label ||
+                `${state.dest.lat.toFixed(4)}, ${state.dest.lng.toFixed(4)}`}
             </p>
           )}
           <Controls

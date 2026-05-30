@@ -1,6 +1,6 @@
 import { DEFAULT_CITY_ID } from "@/config/cities";
 import { DEFAULT_MAX_TIME, MAX_TIME_OPTIONS, isValidLngLat } from "./isochrone";
-import { TRAVEL_MODES, type TravelMode } from "./routing/types";
+import { parseTravelMode, type TravelMode } from "./routing/types";
 
 /**
  * Shareable app state encoded in the URL query string so a link reproduces the
@@ -11,14 +11,6 @@ export interface AppState {
   mode: TravelMode;
   maxTime: number;
   dest?: { lng: number; lat: number; label: string };
-}
-
-const DEFAULT_MODE: TravelMode = "driving";
-
-function parseMode(value: string | null): TravelMode {
-  return TRAVEL_MODES.includes(value as TravelMode)
-    ? (value as TravelMode)
-    : DEFAULT_MODE;
 }
 
 function parseMaxTime(value: string | null): number {
@@ -43,7 +35,7 @@ export function encodeState(state: AppState): URLSearchParams {
 /** Parses app state from URL search params, applying defaults for anything missing or invalid. */
 export function decodeState(params: URLSearchParams): AppState {
   const city = params.get("city") || DEFAULT_CITY_ID;
-  const mode = parseMode(params.get("mode"));
+  const mode = parseTravelMode(params.get("mode"));
   const maxTime = parseMaxTime(params.get("t"));
 
   const lngRaw = params.get("lng");

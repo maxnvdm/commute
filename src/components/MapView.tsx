@@ -101,8 +101,16 @@ export default function MapView({ city, marker, isochrones }: MapViewProps) {
       });
     };
 
-    if (map.isStyleLoaded()) apply();
-    else map.once("load", apply);
+    if (map.isStyleLoaded()) {
+      apply();
+      return;
+    }
+    // Style not ready yet: apply on load, and remove the listener on cleanup so
+    // a superseded render's stale closure can't fire after the data changed.
+    map.once("load", apply);
+    return () => {
+      map.off("load", apply);
+    };
   }, [isochrones]);
 
   return <div ref={containerRef} className="absolute inset-0" />;

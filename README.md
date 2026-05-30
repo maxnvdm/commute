@@ -72,6 +72,6 @@ src/
 - [x] **M0 — Setup:** scaffold, MapLibre + OpenFreeMap map, CI (lint/typecheck/test/build)
 - [x] **M1 — Address search:** geocode proxy + autocomplete, recenter + marker, shareable URL
 - [x] **M2 — Isochrone heatmap (MVP):** ORS proxy + render colored time bands + legend (needs `ORS_API_KEY`)
-- [ ] **M3 — Modes & controls:** walking/cycling toggle, adjustable max time
+- [x] **M3 — Modes & controls:** driving/walking/cycling toggle + adjustable max time, all encoded in the shareable URL
 - [ ] **M4 — Polish & deploy:** loading/error states, caching, mobile, Vercel
 - [ ] **M5/M6 (v2):** Valhalla traffic, OpenTripPlanner transit

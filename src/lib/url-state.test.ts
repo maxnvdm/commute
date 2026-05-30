@@ -6,11 +6,13 @@ describe("url-state", () => {
     const state: AppState = {
       city: "cape-town",
       mode: "cycling",
+      maxTime: 45,
       dest: { lng: 18.4241, lat: -33.9249, label: "City Centre" },
     };
     const decoded = decodeState(encodeState(state));
     expect(decoded.city).toBe("cape-town");
     expect(decoded.mode).toBe("cycling");
+    expect(decoded.maxTime).toBe(45);
     expect(decoded.dest?.label).toBe("City Centre");
     expect(decoded.dest?.lng).toBeCloseTo(18.4241, 5);
     expect(decoded.dest?.lat).toBeCloseTo(-33.9249, 5);
@@ -20,12 +22,18 @@ describe("url-state", () => {
     const decoded = decodeState(new URLSearchParams());
     expect(decoded.city).toBe("cape-town");
     expect(decoded.mode).toBe("driving");
+    expect(decoded.maxTime).toBe(60);
     expect(decoded.dest).toBeUndefined();
   });
 
   it("falls back to driving for an invalid mode", () => {
     const decoded = decodeState(new URLSearchParams("mode=teleport"));
     expect(decoded.mode).toBe("driving");
+  });
+
+  it("falls back to the default max time for an invalid value", () => {
+    expect(decodeState(new URLSearchParams("t=999")).maxTime).toBe(60);
+    expect(decodeState(new URLSearchParams("t=abc")).maxTime).toBe(60);
   });
 
   it("omits destination when coordinates are missing or invalid", () => {

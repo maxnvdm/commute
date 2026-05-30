@@ -5,10 +5,11 @@ import { useSearchParams } from "next/navigation";
 import MapView from "@/components/MapView";
 import SearchBox from "@/components/SearchBox";
 import Legend from "@/components/Legend";
+import Controls from "@/components/Controls";
 import { getCity } from "@/config/cities";
 import type { GeocodeResult } from "@/lib/geocode";
-import { DEFAULT_RANGES } from "@/lib/isochrone";
-import type { IsochroneResult } from "@/lib/routing/types";
+import { rangesForMaxTime } from "@/lib/isochrone";
+import type { IsochroneResult, TravelMode } from "@/lib/routing/types";
 import { decodeState, encodeState, type AppState } from "@/lib/url-state";
 
 function HomeContent() {
@@ -46,6 +47,7 @@ function HomeContent() {
           lng: String(dest.lng),
           lat: String(dest.lat),
           mode: state.mode,
+          ranges: rangesForMaxTime(state.maxTime).join(","),
         });
         const res = await fetch(`/api/isochrone?${params}`, {
           signal: controller.signal,
@@ -71,15 +73,24 @@ function HomeContent() {
       active = false;
       controller.abort();
     };
-  }, [state.dest, state.mode]);
+  }, [state.dest, state.mode, state.maxTime]);
 
   const city = getCity(state.city);
+  const ranges = rangesForMaxTime(state.maxTime);
 
   const handleSelect = useCallback((result: GeocodeResult) => {
     setState((prev) => ({
       ...prev,
       dest: { lng: result.lng, lat: result.lat, label: result.label },
     }));
+  }, []);
+
+  const handleModeChange = useCallback((mode: TravelMode) => {
+    setState((prev) => ({ ...prev, mode }));
+  }, []);
+
+  const handleMaxTimeChange = useCallback((maxTime: number) => {
+    setState((prev) => ({ ...prev, maxTime }));
   }, []);
 
   return (
@@ -101,6 +112,12 @@ function HomeContent() {
               📍 {state.dest.label}
             </p>
           )}
+          <Controls
+            mode={state.mode}
+            maxTime={state.maxTime}
+            onModeChange={handleModeChange}
+            onMaxTimeChange={handleMaxTimeChange}
+          />
           {isoLoading && (
             <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
               Loading commute times…
@@ -117,7 +134,7 @@ function HomeContent() {
       {isochrones && isochrones.features.length > 0 && (
         <div className="pointer-events-none absolute bottom-6 right-4 z-10">
           <div className="pointer-events-auto">
-            <Legend ranges={DEFAULT_RANGES} />
+            <Legend ranges={ranges} />
           </div>
         </div>
       )}

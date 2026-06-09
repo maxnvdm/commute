@@ -113,5 +113,5 @@ export default function MapView({ city, marker, isochrones }: MapViewProps) {
     };
   }, [isochrones]);
 
-  return <div ref={containerRef} className="absolute inset-0" />;
+  return <div ref={containerRef} className="w-full h-[100dvh]" />;
 }
